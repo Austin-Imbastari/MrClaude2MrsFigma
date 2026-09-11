@@ -1,0 +1,12 @@
+{
+  "name": "MrClaude2MrsFigma",
+  "id": "mrclaude2mrsfigma-local",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["*"],
+    "reasoning": "Pasted HTML can reference images/fonts hosted on any origin; they must be fetched to embed as Figma image fills."
+  }
+}
