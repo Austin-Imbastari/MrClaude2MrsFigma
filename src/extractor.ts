@@ -52,6 +52,20 @@ function nameFor(el: Element, index: number): string {
   return `Section ${index + 1}`;
 }
 
+// htmlToFigma zero-bases a tree's descendants relative to a hardcoded (0,0)
+// root, not the real element passed in — harmless when that element is
+// document.body (which does sit at (0,0)), but wrong for any other element:
+// its children keep their raw page-absolute coordinates. Rebase every
+// descendant by the section's own real top-left so (0,0) means "this
+// section's own corner", the way a Figma frame's children always work.
+function rebase(node: Layer, dx: number, dy: number) {
+  node.x = (node.x || 0) - dx;
+  node.y = (node.y || 0) - dy;
+  if (Array.isArray(node.children)) {
+    for (const child of node.children) rebase(child, dx, dy);
+  }
+}
+
 function extract() {
   try {
     const sections = findSections(document.body);
@@ -66,6 +80,7 @@ function extract() {
       // lay sections out side by side instead of keeping their original
       // (page-flow, often huge and irrelevant once split apart) positions.
       const rect = section.getBoundingClientRect();
+      rebase(root, rect.left, rect.top);
       root.name = nameFor(section, i);
       root.width = Math.round(rect.width) || root.width;
       root.height = Math.round(rect.height) || root.height;

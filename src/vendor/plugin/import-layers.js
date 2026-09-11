@@ -70,10 +70,7 @@ export function importLayers(layers) {
         const availableFonts = (yield figma.listAvailableFontsAsync()).filter((font) => font.fontName.style === "Regular");
         yield figma.loadFontAsync(defaultFont);
         const rects = [];
-        let baseFrame = figma.currentPage;
-        // TS bug? TS is implying that frameRoot is PageNode and ignoring the type declaration
-        // and the reassignment unless I force it to treat baseFrame as any
-        let frameRoot = baseFrame;
+        const topLevelFrames = [];
         let createdCount = 0;
         for (const rootLayer of layers) {
             yield traverseLayers(rootLayer, (layer, parent) => __awaiter(void 0, void 0, void 0, function* () {
@@ -85,13 +82,11 @@ export function importLayers(layers) {
                         frame.resize(layer.width || 1, layer.height || 1);
                         assign(frame, layer);
                         rects.push(frame);
-                        ((parent && parent.ref) || baseFrame).appendChild(frame);
+                        ((parent && parent.ref) || figma.currentPage).appendChild(frame);
                         layer.ref = frame;
                         if (!parent) {
-                            frameRoot = frame;
-                            baseFrame = frame;
+                            topLevelFrames.push(frame);
                         }
-                        // baseFrame = frame;
                     }
                     else if (layer.type === "SVG") {
                         const node = figma.createNodeFromSvg(layer.svg);
@@ -101,7 +96,7 @@ export function importLayers(layers) {
                         layer.ref = node;
                         rects.push(node);
                         assign(node, layer);
-                        ((parent && parent.ref) || baseFrame).appendChild(node);
+                        ((parent && parent.ref) || figma.currentPage).appendChild(node);
                     }
                     else if (layer.type === "RECTANGLE") {
                         const rect = figma.createRectangle();
@@ -112,7 +107,7 @@ export function importLayers(layers) {
                         rect.resize(layer.width || 1, layer.height || 1);
                         rects.push(rect);
                         layer.ref = rect;
-                        ((parent && parent.ref) || baseFrame).appendChild(rect);
+                        ((parent && parent.ref) || figma.currentPage).appendChild(rect);
                     }
                     else if (layer.type == "TEXT") {
                         const text = figma.createText();
@@ -151,7 +146,7 @@ export function importLayers(layers) {
                             }
                         }
                         rects.push(text);
-                        ((parent && parent.ref) || baseFrame).appendChild(text);
+                        ((parent && parent.ref) || figma.currentPage).appendChild(text);
                     }
                 }
                 catch (err) {
@@ -160,8 +155,8 @@ export function importLayers(layers) {
             }));
             createdCount++;
         }
-        if (frameRoot.type === "FRAME") {
-            figma.currentPage.selection = [frameRoot];
+        if (topLevelFrames.length) {
+            figma.currentPage.selection = topLevelFrames;
         }
         return createdCount;
     });
