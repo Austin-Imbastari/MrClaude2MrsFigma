@@ -1,14 +1,12 @@
 # MrClaude2MrsFigma Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** A personal Figma plugin: paste HTML (from a Claude Design artifact or anywhere), click Import, get real editable Auto Layout frames/text/images on the canvas.
 
 **Architecture:** Two-context Figma plugin. The UI thread renders pasted HTML into a hidden `iframe[srcdoc]`, runs the vendored `htmlToFigma()` DOM-walker against it, and posts the resulting layer JSON to the plugin thread. The plugin thread (vendored + adapted from the same abandoned open-source engine behind the commercial html.to.design plugin) walks that JSON and creates real Figma nodes with Auto Layout, font matching, and image fills.
 
 **Tech Stack:** TypeScript, esbuild (bundling only, no framework), `@figma/plugin-typings`, vendored `@builder.io/html-to-figma@0.0.3` (MIT), jsdom (dev-only, for the one automatable test).
 
-**Spec:** `docs/superpowers/specs/2026-09-11-html-to-figma-plugin-design.md`
+**Spec:** `docs/specs/2026-09-11-html-to-figma-plugin-design.md`
 
 ## Global Constraints
 
