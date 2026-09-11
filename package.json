@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node build.js",
     "typecheck": "tsc --noEmit",
-    "test": "node --test test/"
+    "test": "node --test"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.87.0",
