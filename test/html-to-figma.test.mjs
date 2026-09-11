@@ -34,12 +34,15 @@ test("htmlToFigma produces a FRAME with a TEXT child for a simple flex card", as
   dom.window.Range.prototype.getBoundingClientRect = fakeRect;
 
   const { htmlToFigma } = await import("../src/vendor/html-to-figma/index.js");
-  const layers = htmlToFigma(dom.window.document.getElementById("root"));
+  // useFrames: true — same call the injected extractor makes, so this also guards
+  // against the nested-tree output silently regressing to a flat sibling list.
+  const layers = htmlToFigma(dom.window.document.getElementById("root"), true);
 
   assert.ok(Array.isArray(layers), "htmlToFigma should return an array");
   assert.ok(layers.length >= 1, "should produce at least one root layer");
   const root = layers[0];
   assert.ok(["FRAME", "GROUP"].includes(root.type), `root should be a FRAME/GROUP, got ${root.type}`);
+  assert.ok(root.children?.length, "useFrames should nest layers under the root as children");
 
   const flatten = (node) => [node, ...((node.children || []).flatMap(flatten))];
   const all = layers.flatMap(flatten);

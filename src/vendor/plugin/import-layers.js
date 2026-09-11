@@ -26,7 +26,7 @@ function getImageFills(layer) {
     return images;
 }
 const normalizeName = (str) => str.toLowerCase().replace(/[^a-z]/gi, "");
-const defaultFont = { family: "Roboto", style: "Regular" };
+const defaultFont = { family: "Inter", style: "Regular" };
 // TODO: keep list of fonts not found
 function getMatchingFont(fontStr, availableFonts) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -54,14 +54,7 @@ const fontCache = {};
 function assign(a, b) {
     for (const key in b) {
         const value = b[key];
-        if (key === "data" && value && typeof value === "object") {
-            const currentData = JSON.parse(a.getSharedPluginData("builder", "data") || "{}") || {};
-            const newData = value;
-            const mergedData = Object.assign({}, currentData, newData);
-            // TODO merge plugin data
-            a.setSharedPluginData("builder", "data", JSON.stringify(mergedData));
-        }
-        else if (typeof value != "undefined" &&
+        if (typeof value != "undefined" &&
             ["width", "height", "type", "ref", "children", "svg"].indexOf(key) === -1) {
             try {
                 a[key] = b[key];

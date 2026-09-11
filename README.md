@@ -1,8 +1,13 @@
 # MrClaude2MrsFigma
 
 Paste HTML (from a Claude Design artifact, or anywhere) into a Figma
-plugin and get back real, editable Auto Layout frames, text, and images —
-not a screenshot.
+plugin and get back real, editable Figma layers — frames nested to match
+the HTML structure, text, and image fills — not a screenshot.
+
+The imported frames are absolutely positioned with constraints, *not*
+Figma Auto Layout frames: nothing in the underlying engine emits
+`layoutMode`. Select an imported frame and use Figma's own "Add auto
+layout" if you want that.
 
 Personal-use plugin. Not published to the Figma Community.
 
@@ -28,13 +33,16 @@ referenced by URL are fetched and embedded as fills.
 
 Built on the open-sourced (now-abandoned) engine behind the commercial
 "html.to.design" Figma plugin — see `NOTICE` for attribution. Pasted HTML
-is rendered in a hidden iframe so real computed styles/layout can be
-read, converted to a layer-tree JSON, and then turned into Figma nodes
-via the Figma Plugin API.
+is rendered in an offscreen iframe so real computed styles/layout can be
+read. The extractor is injected into that iframe as an inline script (it
+has to run in the iframe's own JS realm to measure the right document),
+posts a layer-tree JSON back to the plugin UI, which fetches any image
+bytes and hands the result to the plugin thread to build Figma nodes.
 
 ## Development
 
-- `npm run build` — bundle `src/code.ts` and `src/ui.ts` into `dist/`
+- `npm run build` — bundle `src/code.ts`, `src/extractor.ts` and
+  `src/ui.ts` into `dist/`
 - `npm run typecheck` — TypeScript check with no emit
 - `npm test` — runs the one automatable test (structural check of the
   vendored HTML→layer-JSON extractor via jsdom; jsdom has no real layout
@@ -47,9 +55,10 @@ hand after any change to `src/vendor/plugin/**` or `src/code.ts`:
 
 - [ ] Simple card (padding + rounded background + text) imports with
       correct size/position.
-- [ ] A flex row imports as a horizontal Auto Layout frame.
-- [ ] A flex column with nested text + image imports as a vertical Auto
-      Layout frame with the image fill present.
+- [ ] A flex row imports as a frame with one child layer per item —
+      correctly nested, not a flat pile of siblings on the page.
+- [ ] A flex column with nested text + image imports as a nested frame
+      with both the text layer and the image fill present.
 - [ ] A font not installed locally falls back to Inter without erroring.
 - [ ] Empty or garbage input shows an error / stays disabled instead of
       creating nothing silently or crashing the plugin.

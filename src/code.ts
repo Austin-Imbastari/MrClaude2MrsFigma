@@ -6,7 +6,9 @@ figma.ui.onmessage = async (msg: { type: string; data?: { layers: unknown[] } })
   if (msg.type !== "import" || !msg.data) return;
   try {
     const count = await importLayers(msg.data.layers as any);
-    figma.viewport.scrollAndZoomIntoView(figma.currentPage.selection);
+    if (figma.currentPage.selection.length) {
+      figma.viewport.scrollAndZoomIntoView(figma.currentPage.selection);
+    }
     figma.ui.postMessage({ type: "import-done", count });
   } catch (err) {
     figma.ui.postMessage({ type: "import-error", message: (err as Error).message });
