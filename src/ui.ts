@@ -4,14 +4,24 @@ import { transformWebpToPNG } from "./vendor/plugin/encode-images.js";
 // Replaced at build time (esbuild `define`) with the bundled src/extractor.ts.
 declare const __EXTRACTOR_SCRIPT__: string;
 
-const input = document.getElementById("html-input") as HTMLTextAreaElement;
-const importBtn = document.getElementById("import-btn") as HTMLButtonElement;
+const dropzone = document.getElementById("dropzone") as HTMLDivElement;
+const fileInput = document.getElementById("file-input") as HTMLInputElement;
+const fileName = document.getElementById("file-name") as HTMLDivElement;
 const status = document.getElementById("status") as HTMLDivElement;
 const renderFrame = document.getElementById("render-frame") as HTMLIFrameElement;
 
-function setStatus(text: string, isError = false) {
-  status.textContent = text;
-  status.classList.toggle("error", isError);
+type StatusKind = "info" | "error" | "success";
+
+function setStatus(text: string, kind: StatusKind = "info") {
+  status.classList.remove("info", "error", "success");
+  status.classList.add("visible", kind);
+  status.innerHTML =
+    kind === "info" ? `<span class="spinner"></span><span>${text}</span>` : `<span>${text}</span>`;
+}
+
+function setBusy(busy: boolean) {
+  dropzone.classList.toggle("busy", busy);
+  dropzone.tabIndex = busy ? -1 : 0;
 }
 
 function getImageFills(layer: any): any[] {
@@ -71,19 +81,57 @@ async function sendToFigma(layers: any[]) {
   parent.postMessage({ pluginMessage: { type: "import", data: { layers } } }, "*");
 }
 
-importBtn.addEventListener("click", () => {
-  const html = input.value.trim();
-  if (!html) return;
+function importFile(file: File) {
+  fileName.textContent = file.name;
+  setBusy(true);
+  setStatus(`Reading ${file.name}...`);
 
-  setStatus("Rendering...");
-  importBtn.disabled = true;
-  // The extractor runs in the iframe's own realm; the parser reaches this inline
-  // script after all the pasted markup, so document.body is already populated.
-  renderFrame.srcdoc = `${html}<script>${__EXTRACTOR_SCRIPT__}<\/script>`;
+  const reader = new FileReader();
+  reader.onerror = () => {
+    setStatus("Could not read that file.", "error");
+    setBusy(false);
+  };
+  reader.onload = () => {
+    const html = String(reader.result || "").trim();
+    if (!html) {
+      setStatus("That file is empty.", "error");
+      setBusy(false);
+      return;
+    }
+    setStatus("Rendering...");
+    // The extractor runs in the iframe's own realm; the parser reaches this inline
+    // script after all the pasted markup, so document.body is already populated.
+    renderFrame.srcdoc = `${html}<script>${__EXTRACTOR_SCRIPT__}<\/script>`;
+  };
+  reader.readAsText(file);
+}
+
+dropzone.addEventListener("click", () => {
+  if (!dropzone.classList.contains("busy")) fileInput.click();
+});
+dropzone.addEventListener("keydown", (e: KeyboardEvent) => {
+  if ((e.key === "Enter" || e.key === " ") && !dropzone.classList.contains("busy")) {
+    e.preventDefault();
+    fileInput.click();
+  }
+});
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files?.[0];
+  fileInput.value = "";
+  if (file) importFile(file);
 });
 
-input.addEventListener("input", () => {
-  importBtn.disabled = input.value.trim().length === 0;
+dropzone.addEventListener("dragover", (e: DragEvent) => {
+  e.preventDefault();
+  if (!dropzone.classList.contains("busy")) dropzone.classList.add("drag-over");
+});
+dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag-over"));
+dropzone.addEventListener("drop", (e: DragEvent) => {
+  e.preventDefault();
+  dropzone.classList.remove("drag-over");
+  if (dropzone.classList.contains("busy")) return;
+  const file = e.dataTransfer?.files?.[0];
+  if (file) importFile(file);
 });
 
 window.addEventListener("message", (event: MessageEvent) => {
@@ -92,13 +140,13 @@ window.addEventListener("message", (event: MessageEvent) => {
     if (event.source !== renderFrame.contentWindow) return;
     const { layers, error } = event.data;
     if (error || !layers?.length) {
-      setStatus(`Error: ${error || "No importable elements found in that HTML."}`, true);
-      importBtn.disabled = false;
+      setStatus(error || "No importable elements found in that file.", "error");
+      setBusy(false);
       return;
     }
     sendToFigma(layers).catch((err: Error) => {
-      setStatus(`Error: ${err.message}`, true);
-      importBtn.disabled = false;
+      setStatus(err.message, "error");
+      setBusy(false);
     });
     return;
   }
@@ -107,11 +155,11 @@ window.addEventListener("message", (event: MessageEvent) => {
   const msg = event.data.pluginMessage;
   if (!msg) return;
   if (msg.type === "import-done") {
-    setStatus(`Done — created ${msg.count} layer(s).`);
-    importBtn.disabled = false;
+    setStatus(`Done — created ${msg.count} layer(s).`, "success");
+    setBusy(false);
   }
   if (msg.type === "import-error") {
-    setStatus(`Error: ${msg.message}`, true);
-    importBtn.disabled = false;
+    setStatus(msg.message, "error");
+    setBusy(false);
   }
 });

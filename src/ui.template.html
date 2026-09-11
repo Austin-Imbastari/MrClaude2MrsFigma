@@ -3,20 +3,92 @@
   <head>
     <meta charset="utf-8" />
     <style>
-      body { font-family: -apple-system, sans-serif; margin: 0; padding: 12px; display: flex; flex-direction: column; gap: 8px; height: 100vh; box-sizing: border-box; }
-      textarea { flex: 1; font-family: monospace; font-size: 12px; resize: none; }
-      button { padding: 8px 16px; cursor: pointer; }
-      button:disabled { cursor: not-allowed; opacity: 0.5; }
-      #status { color: #555; font-size: 12px; min-height: 16px; }
-      #status.error { color: #c0392b; }
+      :root {
+        --accent: #4f46e5;
+        --accent-light: #eef2ff;
+        --ink: #18181b;
+        --muted: #71717a;
+        --border: #e4e4e7;
+        --error: #dc2626;
+        --error-light: #fef2f2;
+        --success: #16a34a;
+      }
+      * { box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        height: 100vh;
+        color: var(--ink);
+        background: #fff;
+      }
+      header { display: flex; flex-direction: column; gap: 2px; }
+      header h1 { font-size: 13px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+      header p { font-size: 11px; color: var(--muted); margin: 0; }
+
+      #dropzone {
+        flex: 1;
+        border: 1.5px dashed var(--border);
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-align: center;
+        padding: 16px;
+        cursor: pointer;
+        transition: border-color 120ms ease, background-color 120ms ease;
+      }
+      #dropzone:hover { border-color: var(--accent); background: var(--accent-light); }
+      #dropzone.drag-over { border-color: var(--accent); background: var(--accent-light); border-style: solid; }
+      #dropzone.busy { cursor: not-allowed; opacity: 0.6; }
+      #dropzone svg { width: 28px; height: 28px; color: var(--muted); }
+      #dropzone.drag-over svg, #dropzone:hover svg { color: var(--accent); }
+      #dropzone .title { font-size: 13px; font-weight: 500; }
+      #dropzone .hint { font-size: 11px; color: var(--muted); }
+      #file-name { font-size: 11px; color: var(--accent); font-weight: 500; word-break: break-all; }
+
+      #status {
+        font-size: 12px;
+        min-height: 20px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        display: none;
+        align-items: center;
+        gap: 6px;
+      }
+      #status.visible { display: flex; }
+      #status.info { background: var(--accent-light); color: var(--accent); }
+      #status.error { background: var(--error-light); color: var(--error); }
+      #status.success { background: #f0fdf4; color: var(--success); }
+      #status .spinner {
+        width: 10px; height: 10px; border-radius: 50%;
+        border: 2px solid currentColor; border-top-color: transparent;
+        animation: spin 700ms linear infinite; flex: none;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
       /* Offscreen, not display:none — a display:none iframe has no layout box, so
          every element inside it would measure as a zero-size rect and be skipped. */
       iframe { position: fixed; top: -9999px; left: -9999px; width: 1200px; height: 800px; border: 0; visibility: hidden; }
     </style>
   </head>
   <body>
-    <textarea id="html-input" placeholder="Paste HTML here..."></textarea>
-    <button id="import-btn" disabled>Import to Figma</button>
+    <header>
+      <h1>MrClaude2MrsFigma</h1>
+      <p>Drop an HTML file to import it as real Figma layers</p>
+    </header>
+    <div id="dropzone" tabindex="0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="title">Drop your .html file here</div>
+      <div class="hint">or click to browse</div>
+      <div id="file-name"></div>
+    </div>
+    <input type="file" id="file-input" accept=".html,.htm" hidden />
     <div id="status"></div>
     <iframe id="render-frame"></iframe>
     <script>__UI_SCRIPT__</script>
