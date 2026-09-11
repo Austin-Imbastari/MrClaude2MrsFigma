@@ -1,13 +1,6 @@
-This repository vendors portions of @builder.io/html-to-figma
-(https://github.com/BuilderIO/figma-html), Copyright Builder.io,
-licensed under the MIT License:
-
-  src/vendor/html-to-figma/**
-  src/vendor/helpers.js, src/vendor/helpers.d.ts
-  src/vendor/functions/buffer-to-base64.js, .d.ts
-  src/vendor/plugin/**
-
 MIT License
+
+Copyright (c) 2026 Austin Imbastari
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,3 +19,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+Portions of this software are vendored from third-party MIT-licensed code —
+see NOTICE for details and their original copyright.
