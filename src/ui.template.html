@@ -3,14 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <style>
-      body { font-family: sans-serif; margin: 0; padding: 12px; }
+      body { font-family: -apple-system, sans-serif; margin: 0; padding: 12px; display: flex; flex-direction: column; gap: 8px; height: 100vh; box-sizing: border-box; }
+      textarea { flex: 1; font-family: monospace; font-size: 12px; resize: none; }
       button { padding: 8px 16px; cursor: pointer; }
-      #status { margin-top: 8px; color: #555; font-size: 12px; }
+      button:disabled { cursor: not-allowed; opacity: 0.5; }
+      #status { color: #555; font-size: 12px; min-height: 16px; }
+      #status.error { color: #c0392b; }
+      iframe { display: none; }
     </style>
   </head>
   <body>
-    <button id="run">Create test rectangle</button>
+    <textarea id="html-input" placeholder="Paste HTML here..."></textarea>
+    <button id="import-btn" disabled>Import to Figma</button>
     <div id="status"></div>
+    <iframe id="render-frame"></iframe>
     <script>__UI_SCRIPT__</script>
   </body>
 </html>
