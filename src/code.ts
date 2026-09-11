@@ -1,14 +1,14 @@
+import { importLayers } from "./vendor/plugin/import-layers.js";
+
 figma.showUI(__html__, { width: 360, height: 480 });
 
-figma.ui.onmessage = (msg: { type: string }) => {
-  if (msg.type === "ping") {
-    const rect = figma.createRectangle();
-    rect.resize(100, 100);
-    rect.x = figma.viewport.center.x;
-    rect.y = figma.viewport.center.y;
-    figma.currentPage.appendChild(rect);
-    figma.currentPage.selection = [rect];
-    figma.viewport.scrollAndZoomIntoView([rect]);
-    figma.ui.postMessage({ type: "pong" });
+figma.ui.onmessage = async (msg: { type: string; data?: { layers: unknown[] } }) => {
+  if (msg.type !== "import" || !msg.data) return;
+  try {
+    const count = await importLayers(msg.data.layers as any);
+    figma.viewport.scrollAndZoomIntoView(figma.currentPage.selection);
+    figma.ui.postMessage({ type: "import-done", count });
+  } catch (err) {
+    figma.ui.postMessage({ type: "import-error", message: (err as Error).message });
   }
 };
